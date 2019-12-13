@@ -29,7 +29,7 @@ const App: FC = () => {
             [classes.contentShift]: state.open
           })}
         >
-          <Sidebar containerRef={mainElRef} />
+          <Sidebar open={state.open} containerRef={mainElRef} />
           <div className={classes.drawerHeader} />
           <Routes />
         </main>

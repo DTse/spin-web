@@ -16,10 +16,9 @@ import HomeIcon from "@material-ui/icons/Home";
 
 import { useSidebarStyles } from "./useSidebarStyles";
 
-import { useAppContext } from "contexts/AppContext";
-
-interface DrawerProps {
+interface IDrawerProps {
   containerRef: any;
+  open: boolean;
 }
 
 /**
@@ -28,24 +27,25 @@ interface DrawerProps {
  * @return {any}
  **/
 
-const Sidebar: FC<RouteComponentProps & DrawerProps> = ({
+const Sidebar: FC<RouteComponentProps & IDrawerProps> = ({
   history,
-  containerRef
+  containerRef,
+  open
 }: any): JSX.Element => {
   const classes = useSidebarStyles();
-  const { state } = useAppContext();
+
   return (
     <Drawer
       variant="persistent"
       open={true}
       className={clsx(classes.drawer, {
-        [classes.drawerOpen]: state.open,
-        [classes.drawerClose]: !state.open
+        [classes.drawerOpen]: open,
+        [classes.drawerClose]: !open
       })}
       classes={{
         paper: clsx(classes.drawerPaper, {
-          [classes.drawerOpen]: state.open,
-          [classes.drawerClose]: !state.open
+          [classes.drawerOpen]: open,
+          [classes.drawerClose]: !open
         })
       }}
       ModalProps={{
