@@ -5,6 +5,8 @@ import clsx from "clsx";
 
 import { useDashboardStyles } from "./useDashboardStyles";
 import { useAppContext } from "contexts/AppContext";
+
+import FilterBar from "components/FilterBar";
 /**
  * Return the Dashboard page.
  * @return {any}
@@ -12,7 +14,7 @@ import { useAppContext } from "contexts/AppContext";
 
 const Dashboard: FC = (): JSX.Element => {
   const classes = useDashboardStyles();
-  const { state } = useAppContext();
+  const { state, dispatch } = useAppContext();
 
   return (
     <div className={classes.root}>
@@ -24,7 +26,7 @@ const Dashboard: FC = (): JSX.Element => {
               [classes.drawerClose]: !state.open
             })}
           >
-            xs=12
+            <FilterBar contextDispatch={dispatch} />
           </Paper>
         </Grid>
         <Grid item xs={12} className={classes.gridItem}>

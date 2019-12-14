@@ -6,15 +6,18 @@ const useAppContext = () => useContext(AppContext);
 
 interface State {
   open: boolean;
-  players: Array<any>;
+  entries: Array<any>;
 }
 
-type Action = { type: "reset" } | { type: "setOpen"; value: boolean };
+type Action =
+  | { type: "reset" }
+  | { type: "setOpen"; value: boolean }
+  | { type: "setEntries"; value: Array<any> };
 
 // Initial app state
 let initialState: any = {
   open: false,
-  players: [] as any[]
+  entries: [] as any[]
 };
 
 /**
@@ -30,6 +33,8 @@ let reducer = (state: State, action: Action): State => {
       return initialState;
     case "setOpen":
       return { ...state, open: action.value };
+    case "setEntries":
+      return { ...state, entries: action.value };
     default:
       return state;
   }

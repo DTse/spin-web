@@ -1,7 +1,11 @@
-import React, { useState, useEffect, memo, FC } from "react";
-
-import { getUnixTime, format } from "date-fns";
-import _ from "lodash/fp";
+import React, {
+  useState,
+  useEffect,
+  memo,
+  FC,
+  MutableRefObject,
+  ChangeEvent
+} from "react";
 
 import {
   TextField,
@@ -20,53 +24,80 @@ import {
 
 import CloseIcon from "@material-ui/icons/Close";
 
-const NextStep: FC = (): JSX.Element => {
-  let value = "";
+type PendingType = {
+  id: string;
+  label: string;
+  type: string;
+  options?: any;
+};
 
+type NextStepTypes = {
+  setPending: Function;
+  setSelected: Function;
+  setOpen: Function;
+  selected: Array<object>;
+  pendingValue: PendingType;
+  filterBarRef: MutableRefObject<any>;
+  dispatch: any;
+};
+
+const NextStep: FC<NextStepTypes> = ({
+  setPending,
+  setSelected,
+  setOpen,
+  filterBarRef,
+  pendingValue,
+  selected,
+  dispatch
+}): JSX.Element => {
+  let value: string | number;
+
+  const [selectedItems, setSelectedItems] = useState();
   useEffect(() => {
     filterBarRef.current.blur();
   }, []);
 
-  const InputText = props => {
-    const handleChange = e => props.onChange(e.target.value);
+  // const InputText = (props) => {
+  //   const handleChange = e => props.onChange(e.target.value);
 
-    return (
-      <TextField
-        id="filled-basic"
-        className="field"
-        margin="normal"
-        type="text"
-        placeholder={pendingValue.label}
-        onChange={handleChange}
-      />
-    );
-  };
+  //   return (
+  //     <TextField
+  //       id="filled-basic"
+  //       className="field"
+  //       margin="normal"
+  //       type="text"
+  //       placeholder={pendingValue.label}
+  //       onChange={handleChange}
+  //     />
+  //   );
+  // };
 
-  const InputSelect = memo(props => {
-    const options = pendingValue.options;
-    const [selectedItems, setSelectedItems] = useState("");
-    const handleChange = e => {
-      setSelectedItems(e.target.value);
-      return props.onChange(e.target.value);
-    };
+  const InputSelect = memo(
+    (props: any): JSX.Element => {
+      const options = pendingValue.options;
+      const handleChange = (e: React.ChangeEvent<{ value: unknown }>) => {
+        setSelectedItems(e.target.value as string);
+        return props.onChange(e.target.value as string);
+      };
 
-    return (
-      <FormControl>
-        <InputLabel id="select">{pendingValue.label}</InputLabel>
-        <Select
-          MenuProps={{ className: "select-menu" }}
-          onChange={handleChange}
-          value={selectedItems}
-        >
-          {Object.keys(options).map((key, index) => (
-            <MenuItem key={index} value={options[key]}>
-              {key}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    );
-  });
+      return (
+        <FormControl>
+          <InputLabel id="select">{pendingValue.label}</InputLabel>
+          <Select
+            MenuProps={{ className: "select-menu" }}
+            onChange={handleChange}
+            value={selectedItems}
+          >
+            {Object.keys(options).map((key: string | number, index: number) => (
+              <MenuItem key={index} value={options[key]}>
+                {key}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      );
+    }
+  );
 
   const handleSubmit = () => {
     setSelected([
@@ -89,16 +120,12 @@ const NextStep: FC = (): JSX.Element => {
     setPending(null);
   };
 
-  const handleChange = pending => e => {
-    value = e;
-    if (pending.id === "nomos") lastNomos = e.split(" ")[1];
-    else lastNomos = null;
-  };
+  const handleChange = (e: string | number) => (value = e);
 
   return (
     <Card className="NextStep">
       <CardHeader
-        title={pendingValue.label}
+        title={pendingValue && pendingValue.label}
         action={
           <IconButton
             aria-label="close"
@@ -110,11 +137,11 @@ const NextStep: FC = (): JSX.Element => {
         }
       />
       <CardContent>
-        {pendingValue.type === "select" && (
-          <InputSelect
-            key="field-select-wrapper"
-            onChange={handleChange(pendingValue)}
-          />
+        {pendingValue && pendingValue.type === "select" && (
+          <InputSelect key="field-select-wrapper" onChange={handleChange} />
+        )}
+        {pendingValue && pendingValue.type === "range" && (
+          <InputSelect key="field-select-wrapper" onChange={handleChange} />
         )}
       </CardContent>
       <CardActions>

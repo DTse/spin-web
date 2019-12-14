@@ -1,6 +1,11 @@
-import React, { useState, useReducer, useRef, useEffect, memo } from "react";
-
-import _ from "lodash/fp";
+import React, {
+  useState,
+  useReducer,
+  useRef,
+  useEffect,
+  memo,
+  FC
+} from "react";
 
 import {
   ClickAwayListener,
@@ -14,25 +19,46 @@ import {
 
 import { Autocomplete } from "@material-ui/lab";
 
-import searchRequest from "./requests.js";
+import { searchRequest } from "services/searchRequest";
 import NextStep from "./NextStep";
 
 interface IState {
-    id:  Array<any>,
-    firstName:  Array<any>,
-    lastName:  Array<any>,
-    number:  Array<any>,
-    email: Array<any>
+  [key: string]: Array<any>;
+  availability: Array<any>;
+  type: Array<any>;
+  location: Array<any>;
+  sqMeters: Array<any>;
+  price: Array<any>;
 }
 
-type Action = { type: "reset" } | { type: "set"; [key: string]: any } | { type: "delete", [key: string]: any };
+type Action =
+  | { field: "reset" }
+  | { field: "setAvailability"; availability: Array<any> }
+  | { field: "setType"; type: Array<any> }
+  | { field: "setLocation"; location: Array<any> }
+  | { field: "setSqMeters"; sqMeters: Array<any> }
+  | { field: "setPrice"; price: Array<any> };
 
-let reducer = (state: IState, action: Action) => {
-  switch (action.type) {
-    case "set":
-      return { ...state, [action.type]: [...state[action.type], action.value] };
-    case "delete":
-      return { ...state, [action.field]: [...action.value] };
+const initQuery = {
+  availability: [],
+  type: [],
+  location: [],
+  sqMeters: [],
+  price: []
+};
+
+let reducer = (state: IState, action: Action): IState => {
+  switch (action.field) {
+    case "setAvailability":
+      return { ...state, availability: [...action.availability] };
+    case "setType":
+      return { ...state, type: [...action.type] };
+    case "setLocation":
+      return { ...state, location: [...action.location] };
+    case "setSqMeters":
+      return { ...state, sqMeters: [...action.sqMeters] };
+    case "setPrice":
+      return { ...state, price: [...state.price, action.price] };
     case "reset":
       return { ...initQuery };
     default:
@@ -40,62 +66,70 @@ let reducer = (state: IState, action: Action) => {
   }
 };
 
-const initQuery = {
-  id: [],
-  firstName: [],
-  lastName: [],
-  number: [],
-  email: []
-};
-
-const filters = [
+const filters: { id: string; type: string; label: string; options?: any }[] = [
   {
-    id: "id",
-    type: "text",
-    label: "ID"
-  },
-  {
-    id: "email",
-    type: "text",
-    label: "Email"
-  },
-  {
-    id: "status",
+    id: "availability",
     type: "select",
-    label: "Κατάσταση",
+    label: "Availability",
+    options: {}
+  },
+  {
+    id: "type",
+    type: "select",
+    label: "Type",
+    options: {}
+  },
+  {
+    id: "location",
+    type: "select",
+    label: "Location",
+    options: {}
+  },
+  {
+    id: "sqMeters",
+    type: "range",
+    label: "Square Meters",
     options: {
-      Εγγεγραμμένοι: "",
-      Ταυτοποιημένοι: 1
+      max: 0,
+      min: 0
     }
   },
   {
-    id: "gender",
-    type: "select",
-    label: "Φύλο",
+    id: "price",
+    type: "range",
+    label: "Price",
     options: {
-      Άρρεν: "male",
-      Θήλυ: "female"
+      min: 0,
+      max: 0
     }
-  },
+  }
 ];
 
-let lastNomos = null;
+interface IFilters {
+  id: string;
+  type: string;
+  label: string;
+  options: any;
+  value?: any;
+}
+
+type FilterBarProps = {
+  contextDispatch: Function;
+};
 
 /**
  * Create the Filter Bar component
  * @param {type}
  * @return {element}
  **/
-const FilterBar = () => {
+const FilterBar: FC<FilterBarProps> = ({ contextDispatch }): JSX.Element => {
   const [query, dispatch] = useReducer(reducer, initQuery);
-  const [pendingValue, setPending] = useState(null);
+  const [pendingValue, setPending] = useState();
   const [selected, setSelected] = useState([]);
   const [open, setOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [running, setRunning] = useState(false);
-
-  let filterBarRef = useRef(0);
-
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  let filterBarRef = useRef<HTMLElement | null>(null);
+  console.log(pendingValue);
   const defaultProps = {
     options: filters,
     value: selected,
@@ -103,7 +137,19 @@ const FilterBar = () => {
     PaperComponent: (params: any): JSX.Element => (
       <Grow in style={{ transformOrigin: "0 0 0" }}>
         <Paper {...params}>
-          {pendingValue !== null ? <NextStep /> : params.children}
+          {pendingValue ? (
+            <NextStep
+              setPending={setPending}
+              pendingValue={pendingValue}
+              setSelected={setSelected}
+              selected={selected}
+              dispatch={contextDispatch}
+              setOpen={setOpen}
+              filterBarRef={filterBarRef}
+            />
+          ) : (
+            params.children
+          )}
         </Paper>
       </Grow>
     ),
@@ -115,17 +161,17 @@ const FilterBar = () => {
         placement="bottom-start"
       />
     ),
-    onChange: (event: any, value: any) => {
+    onChange: (event: any, value: any): void => {
       value.length === 0 ? handleReset() : setPending(value[value.length - 1]);
     }
   };
 
-  const handleClick = () => {
+  const handleClick = (): void => {
     setOpen(true);
     setAnchorEl(filterBarRef.current);
   };
 
-  const handleClose = e => {
+  const handleClose = (e: any): void => {
     if (
       e.target.classList.value !== "" &&
       e.target.classList.value.indexOf("Mui") !== 0
@@ -135,41 +181,37 @@ const FilterBar = () => {
     }
   };
 
-  const handleDelete = option => {
-    const result = query[option.id].filter(item => item !== option.value);
-    dispatch({ type: "delete", field: option.id, value: result });
+  // const handleDelete = (option: IFilters) => {
+  // const result = query[option.id].filter(
+  //   (item: any): boolean => item !== option.value
+  // );
+  // dispatch({ type: "delete", field: option.id, value: result });
 
-    const newSelected = [
-      ...selected.filter(item => {
-        if (item.id === option.id) {
-          return item.value !== option.value;
-        } else {
-          return true;
-        }
-      })
-    ];
-    setSelected([...newSelected]);
-  };
+  //   const newSelected = [
+  //     ...selected.filter((item: any): boolean => {
+  //       if (item.id === option.id) {
+  //         return item.value !== option.value;
+  //       } else {
+  //         return true;
+  //       }
+  //     })
+  //   ];
+  //   setSelected([...newSelected]);
+  // };
 
   const handleReset = () => {
     setSelected([]);
     setPending(null);
     setOpen(false);
-    dispatch({ type: "reset" });
-    sessionStorage.removeItem("filterBar");
-    sessionStorage.removeItem("query");
+    dispatch({ field: "reset" });
   };
 
   const getKeyByValue = (object: any, value: any) =>
-    Object.keys(object).find(key: any => object[key] === value);
+    Object.keys(object).find((key: any) => object[key] === value);
 
   useEffect(() => {
-    window.page = 0;
-    sessionStorage.setItem("filterBar", JSON.stringify(selected));
-    setRunning(true);
-    searchRequest(query).then(res => {
+    searchRequest(query).then((res: any) => {
       if (res.status === "success") {
-        setRunning(false);
       }
     });
   }, [query]);
@@ -185,8 +227,8 @@ const FilterBar = () => {
           disableCloseOnSelect
           popupIcon={null}
           freeSolo
-          renderTags={(value: any, getTagProps: any) => {
-            return value.map((option: any, index: number) => {
+          renderTags={(value: Array<any>, getTagProps: any) => {
+            return value.map((option: IFilters, index: number) => {
               const tagProps = getTagProps({ index });
               const finalValue =
                 option.type === "select"
@@ -202,7 +244,7 @@ const FilterBar = () => {
                   variant="outlined"
                   label={`${option.label}: ${finalValue}`}
                   onClick={e => e.preventDefault()}
-                  onDelete={() => handleDelete(option)}
+                  // onDelete={() => handleDelete(option)}
                 />
               );
             });
@@ -219,7 +261,6 @@ const FilterBar = () => {
             />
           )}
         />
-        {running && <LinearProgress />}
       </>
     </ClickAwayListener>
   );
