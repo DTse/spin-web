@@ -7,6 +7,7 @@ import { useDashboardStyles } from "./useDashboardStyles";
 import { useAppContext } from "contexts/AppContext";
 
 import FilterBar from "components/FilterBar";
+import DataTable from "components/DataTable";
 /**
  * Return the Dashboard page.
  * @return {any}
@@ -36,7 +37,7 @@ const Dashboard: FC = (): JSX.Element => {
               [classes.drawerClose]: !state.open
             })}
           >
-            xs=12
+            <DataTable state={state} dispatch={dispatch} />
           </Paper>
         </Grid>
       </Grid>

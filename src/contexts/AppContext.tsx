@@ -7,17 +7,23 @@ const useAppContext = () => useContext(AppContext);
 interface State {
   open: boolean;
   entries: Array<any>;
+  query: Object;
+  pagination: Object;
 }
 
 type Action =
   | { type: "reset" }
   | { type: "setOpen"; value: boolean }
-  | { type: "setEntries"; value: Array<any> };
+  | { type: "setEntries"; value: Array<any> }
+  | { type: "setQuery"; value: Object }
+  | { type: "setPagination"; value: Array<any> };
 
 // Initial app state
 let initialState: any = {
   open: false,
-  entries: [] as any[]
+  entries: [] as any[],
+  pagination: Object,
+  query: Object
 };
 
 /**
@@ -34,7 +40,11 @@ let reducer = (state: State, action: Action): State => {
     case "setOpen":
       return { ...state, open: action.value };
     case "setEntries":
-      return { ...state, entries: action.value };
+      return { ...state, entries: [...action.value] };
+    case "setPagination":
+      return { ...state, pagination: { ...action.value } };
+    case "setQuery":
+      return { ...state, query: { ...action.value } };
     default:
       return state;
   }
