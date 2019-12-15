@@ -1,14 +1,6 @@
-import React, {
-  useState,
-  useEffect,
-  memo,
-  FC,
-  MutableRefObject,
-  ChangeEvent
-} from "react";
+import React, { useState, useEffect, SFC, FC, MutableRefObject } from "react";
 
 import {
-  TextField,
   Card,
   CardActions,
   CardContent,
@@ -19,7 +11,7 @@ import {
   Select,
   InputLabel,
   FormControl,
-  ListSubheader
+  Slider
 } from "@material-ui/core";
 
 import CloseIcon from "@material-ui/icons/Close";
@@ -50,11 +42,13 @@ const NextStep: FC<NextStepTypes> = ({
   selected,
   dispatch
 }): JSX.Element => {
-  let value: string | number;
+  let value: number | number[] = 0;
 
-  const [selectedItems, setSelectedItems] = useState();
+  const [selectedItems, setSelectedItems] = useState<number | number[]>();
+
   useEffect(() => {
     filterBarRef.current.blur();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // const InputText = (props) => {
@@ -72,44 +66,68 @@ const NextStep: FC<NextStepTypes> = ({
   //   );
   // };
 
-  const InputSelect = memo(
-    (props: any): JSX.Element => {
-      const options = pendingValue.options;
-      const handleChange = (e: React.ChangeEvent<{ value: unknown }>) => {
-        setSelectedItems(e.target.value as string);
-        return props.onChange(e.target.value as string);
-      };
+  const InputSelect: SFC = (): JSX.Element => {
+    const options = pendingValue.options;
+    const handleChange = (e: React.ChangeEvent<{ value: unknown }>): void => {
+      setSelectedItems(e.target.value as number);
+    };
 
-      return (
-        <FormControl>
-          <InputLabel id="select">{pendingValue.label}</InputLabel>
-          <Select
-            MenuProps={{ className: "select-menu" }}
-            onChange={handleChange}
-            value={selectedItems}
-          >
-            {Object.keys(options).map((key: string | number, index: number) => (
-              <MenuItem key={index} value={options[key]}>
-                {key}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      );
-    }
-  );
+    return (
+      <FormControl style={{ width: "100%" }}>
+        <InputLabel id="select">{pendingValue.label}</InputLabel>
+        <Select
+          defaultValue={""}
+          MenuProps={{ className: "select-menu" }}
+          onChange={handleChange}
+          value={selectedItems}
+        >
+          {Object.keys(options).map((key: string | number, index: number) => (
+            <MenuItem key={index} value={options[key]}>
+              {key}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    );
+  };
+
+  const InputRange: SFC = (): JSX.Element => {
+    const options = pendingValue.options;
+
+    const handleChange = (
+      e: React.ChangeEvent<unknown>,
+      newValue: number | number[]
+    ): void => {
+      setSelectedItems(newValue as number[]);
+    };
+
+    return (
+      <Slider
+        defaultValue={[options.min, options.max]}
+        value={selectedItems}
+        min={options.min}
+        max={options.max}
+        step={1}
+        onChangeCommitted={handleChange}
+        valueLabelDisplay="auto"
+        aria-labelledby="range-slider"
+      />
+    );
+  };
 
   const handleSubmit = () => {
     setSelected([
       ...selected,
       {
         ...pendingValue,
-        value: value
+        value: selectedItems
       }
     ]);
     dispatch({
-      type: pendingValue.id,
-      value: value
+      field: `set${pendingValue.id.charAt(0).toUpperCase() +
+        pendingValue.id.slice(1)}`,
+      [pendingValue.id]:
+        pendingValue.type === "range" ? [selectedItems] : selectedItems
     });
     setOpen(false);
     setPending(null);
@@ -120,10 +138,8 @@ const NextStep: FC<NextStepTypes> = ({
     setPending(null);
   };
 
-  const handleChange = (e: string | number) => (value = e);
-
   return (
-    <Card className="NextStep">
+    <Card className="NextStep" style={{ maxWidth: 250 }}>
       <CardHeader
         title={pendingValue && pendingValue.label}
         action={
@@ -138,10 +154,10 @@ const NextStep: FC<NextStepTypes> = ({
       />
       <CardContent>
         {pendingValue && pendingValue.type === "select" && (
-          <InputSelect key="field-select-wrapper" onChange={handleChange} />
+          <InputSelect key="field-select-wrapper" />
         )}
         {pendingValue && pendingValue.type === "range" && (
-          <InputSelect key="field-select-wrapper" onChange={handleChange} />
+          <InputRange key="field-select-wrapper" />
         )}
       </CardContent>
       <CardActions>

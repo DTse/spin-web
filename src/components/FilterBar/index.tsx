@@ -1,11 +1,4 @@
-import React, {
-  useState,
-  useReducer,
-  useRef,
-  useEffect,
-  memo,
-  FC
-} from "react";
+import React, { useState, useReducer, useRef, useEffect, FC } from "react";
 
 import {
   ClickAwayListener,
@@ -13,20 +6,19 @@ import {
   Paper,
   TextField,
   Chip,
-  Grow,
-  LinearProgress
+  Grow
 } from "@material-ui/core";
 
 import { Autocomplete } from "@material-ui/lab";
 
-import { searchRequest } from "services/searchRequest";
+import { searchRequest, filtersRequest } from "services";
 import NextStep from "./NextStep";
 
 interface IState {
   [key: string]: Array<any>;
   availability: Array<any>;
   type: Array<any>;
-  location: Array<any>;
+  locations: Array<any>;
   sqMeters: Array<any>;
   price: Array<any>;
 }
@@ -35,14 +27,14 @@ type Action =
   | { field: "reset" }
   | { field: "setAvailability"; availability: Array<any> }
   | { field: "setType"; type: Array<any> }
-  | { field: "setLocation"; location: Array<any> }
+  | { field: "setLocations"; locations: Array<any> }
   | { field: "setSqMeters"; sqMeters: Array<any> }
   | { field: "setPrice"; price: Array<any> };
 
 const initQuery = {
   availability: [],
   type: [],
-  location: [],
+  locations: [],
   sqMeters: [],
   price: []
 };
@@ -50,13 +42,16 @@ const initQuery = {
 let reducer = (state: IState, action: Action): IState => {
   switch (action.field) {
     case "setAvailability":
-      return { ...state, availability: [...action.availability] };
+      return {
+        ...state,
+        availability: [...state.availability, action.availability]
+      };
     case "setType":
-      return { ...state, type: [...action.type] };
-    case "setLocation":
-      return { ...state, location: [...action.location] };
+      return { ...state, type: [...state.type, action.type] };
+    case "setLocations":
+      return { ...state, locations: [...state.locations, action.locations] };
     case "setSqMeters":
-      return { ...state, sqMeters: [...action.sqMeters] };
+      return { ...state, sqMeters: [...state.sqMeters, action.sqMeters] };
     case "setPrice":
       return { ...state, price: [...state.price, action.price] };
     case "reset":
@@ -66,7 +61,12 @@ let reducer = (state: IState, action: Action): IState => {
   }
 };
 
-const filters: { id: string; type: string; label: string; options?: any }[] = [
+const initFilters: {
+  id: string;
+  type: string;
+  label: string;
+  options?: any;
+}[] = [
   {
     id: "availability",
     type: "select",
@@ -80,7 +80,7 @@ const filters: { id: string; type: string; label: string; options?: any }[] = [
     options: {}
   },
   {
-    id: "location",
+    id: "locations",
     type: "select",
     label: "Location",
     options: {}
@@ -91,7 +91,7 @@ const filters: { id: string; type: string; label: string; options?: any }[] = [
     label: "Square Meters",
     options: {
       max: 0,
-      min: 0
+      min: 100
     }
   },
   {
@@ -100,7 +100,7 @@ const filters: { id: string; type: string; label: string; options?: any }[] = [
     label: "Price",
     options: {
       min: 0,
-      max: 0
+      max: 100
     }
   }
 ];
@@ -128,14 +128,20 @@ const FilterBar: FC<FilterBarProps> = ({ contextDispatch }): JSX.Element => {
   const [selected, setSelected] = useState([]);
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  const [filters, setFilters] = useState(initFilters);
+
   let filterBarRef = useRef<HTMLElement | null>(null);
-  console.log(pendingValue);
+
   const defaultProps = {
     options: filters,
     value: selected,
     getOptionLabel: (option: any) => option.label,
     PaperComponent: (params: any): JSX.Element => (
-      <Grow in style={{ transformOrigin: "0 0 0" }}>
+      <Grow
+        in
+        style={{ transformOrigin: "0 0 0", maxWidth: 250, width: "100%" }}
+      >
         <Paper {...params}>
           {pendingValue ? (
             <NextStep
@@ -143,7 +149,7 @@ const FilterBar: FC<FilterBarProps> = ({ contextDispatch }): JSX.Element => {
               pendingValue={pendingValue}
               setSelected={setSelected}
               selected={selected}
-              dispatch={contextDispatch}
+              dispatch={dispatch}
               setOpen={setOpen}
               filterBarRef={filterBarRef}
             />
@@ -157,7 +163,7 @@ const FilterBar: FC<FilterBarProps> = ({ contextDispatch }): JSX.Element => {
       <Popper
         {...params}
         anchorEl={anchorEl}
-        className="bar-dropdown"
+        style={{ maxWidth: 250, width: "100%" }}
         placement="bottom-start"
       />
     ),
@@ -212,9 +218,23 @@ const FilterBar: FC<FilterBarProps> = ({ contextDispatch }): JSX.Element => {
   useEffect(() => {
     searchRequest(query).then((res: any) => {
       if (res.status === "success") {
+        contextDispatch({ type: "setEntries", value: [...res.entries] });
+        contextDispatch({
+          type: "setPagination",
+          value: { ...res.pagination }
+        });
+        contextDispatch({ type: "setQuery", value: { ...query } });
       }
     });
-  }, [query]);
+  }, [query, contextDispatch]);
+
+  useEffect(() => {
+    filtersRequest().then((res: any) => {
+      if (res.status === "success") {
+        setFilters([...res.filters]);
+      }
+    });
+  }, []);
 
   return (
     <ClickAwayListener onClickAway={handleClose}>
@@ -254,7 +274,7 @@ const FilterBar: FC<FilterBarProps> = ({ contextDispatch }): JSX.Element => {
               {...params}
               inputRef={filterBarRef}
               variant="standard"
-              placeholder="Click για νέο φίλτρο"
+              placeholder="Click to add filter"
               margin="normal"
               fullWidth
               onClick={handleClick}
