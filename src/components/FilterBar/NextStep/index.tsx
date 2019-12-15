@@ -33,6 +33,17 @@ type NextStepTypes = {
   dispatch: any;
 };
 
+/**
+ * Next Step component for the filter bar .
+ * @param {function} setPending
+ * @param {function} setSelected
+ * @param {function} SetOpen
+ * @param {function} dispatch
+ * @param {object} pendingValue
+ * @param {object} filterBarRef
+ * @param {object} selected
+ * @return {element} NextStep
+ **/
 const NextStep: FC<NextStepTypes> = ({
   setPending,
   setSelected,
@@ -66,6 +77,10 @@ const NextStep: FC<NextStepTypes> = ({
   //   );
   // };
 
+  /**
+   * Select input for the next step
+   * @return {any} InputSelect
+   **/
   const InputSelect: SFC = (): JSX.Element => {
     const options = pendingValue.options;
     const handleChange = (e: React.ChangeEvent<{ value: unknown }>): void => {
@@ -91,6 +106,10 @@ const NextStep: FC<NextStepTypes> = ({
     );
   };
 
+  /**
+   * Range input for next step.
+   * @return {element} InputRange
+   **/
   const InputRange: SFC = (): JSX.Element => {
     const options = pendingValue.options;
 

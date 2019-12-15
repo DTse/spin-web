@@ -18,7 +18,10 @@ type Action =
   | { type: "setQuery"; value: Object }
   | { type: "setPagination"; value: Array<any> };
 
-// Initial app state
+/**
+ * Initial app statee.
+ * @return {object}
+ **/
 let initialState: any = {
   open: false,
   entries: [] as any[],
@@ -50,14 +53,13 @@ let reducer = (state: State, action: Action): State => {
   }
 };
 
+type ACPProps = { children: any };
+
 /**
  * Context provider.
  * @param {object} props
  * @return {any}
  **/
-
-type ACPProps = { children: any };
-
 const AppContextProvider: FC<ACPProps> = ({ children }): JSX.Element => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const value = { state, dispatch };

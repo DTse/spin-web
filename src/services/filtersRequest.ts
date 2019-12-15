@@ -4,7 +4,7 @@ const CancelToken = axios.CancelToken;
 let cancel: any;
 
 /**
- * Fitlers request
+ * Get filters request
  * @param {array} params
  * @return {element}
  **/

@@ -39,6 +39,12 @@ const initQuery = {
   price: []
 };
 
+/**
+ * Query reducer..
+ * @param {object} state
+ * @param {object} action
+ * @return {any}
+ **/
 let reducer = (state: IState, action: Action): IState => {
   switch (action.field) {
     case "setAvailability":
@@ -119,7 +125,7 @@ type FilterBarProps = {
 
 /**
  * Create the Filter Bar component
- * @param {type}
+ * @param {function} contextDispatch
  * @return {element}
  **/
 const FilterBar: FC<FilterBarProps> = ({ contextDispatch }): JSX.Element => {

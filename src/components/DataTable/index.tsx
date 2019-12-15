@@ -53,6 +53,11 @@ const headCells: HeadCell[] = [
   { id: "price", numeric: true, disablePadding: false, label: "Price" }
 ];
 
+/**
+ * Create the Table Header.
+ * @return {element}
+ **/
+
 const EnhancedTableHead = (): JSX.Element => {
   return (
     <TableHead>
@@ -75,7 +80,14 @@ interface IDataTableProps {
   state: any;
   dispatch: any;
 }
-const DataTable: FC<IDataTableProps> = ({ state, dispatch }) => {
+
+/**
+ * Create the data table.
+ * @param {object} state
+ * @param {function} dispatch
+ * @return {element}
+ **/
+const DataTable: FC<IDataTableProps> = ({ state, dispatch }): JSX.Element => {
   const classes = useDataTableStyles();
 
   const { entries, pagination, query } = state;

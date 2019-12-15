@@ -1,5 +1,10 @@
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
 
+/**
+ * Data table styles.
+ * @param {object} theme
+ * @return {any}
+ **/
 export const useDataTableStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
