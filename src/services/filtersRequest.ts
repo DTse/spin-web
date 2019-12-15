@@ -1,25 +1,19 @@
 import axios from "axios";
-import queryString from "query-string";
 
 const CancelToken = axios.CancelToken;
 let cancel: any;
 
 /**
- * Search request
+ * Fitlers request
  * @param {array} params
  * @return {element}
  **/
-export const searchRequest = (params: any): any => {
+export const filtersRequest = (): any => {
   cancel && cancel();
 
   return new Promise((resolve, reject): void => {
-    const queryParams = queryString.stringify(
-      { ...params },
-      { arrayFormat: "index" }
-    );
-
     axios
-      .get(`http://localhost:8000/search?${queryParams}`, {
+      .get(`http://localhost:8000/filters`, {
         cancelToken: new CancelToken(e => {
           cancel = e;
         })
@@ -28,8 +22,7 @@ export const searchRequest = (params: any): any => {
         if (res.status === 200) {
           resolve({
             status: "success",
-            entries: [...res.data.data],
-            pagination: { ...res.data.pagination }
+            filters: [...res.data]
           });
         } else {
           reject({ status: "fail" });
